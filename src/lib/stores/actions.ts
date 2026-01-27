@@ -28,11 +28,11 @@ export function createBaseStoreActions<T, P>(
 
     params: _initialData.params,
     updateParams: (newParams, options) => {
-      const _options = {autoFetch: true, ...options};
+      const _options = {ignoreFetch: false, ...options};
       set((state) => ({
         params: { ...state.params, ...newParams },
       }))
-      if (_options.autoFetch) {
+      if (!_options.ignoreFetch) {
         get().fetch();
       }
     },
@@ -151,11 +151,11 @@ export function createListStoreActions<T, P>(
 
     params: _initialData.params,
     updateParams: (newParams, options) => {
-      const _options = {autoFetch: true, ...options};
+      const _options = {ignoreFetch: false, ...options};
       set((state) => ({
         params: { ...state.params, ...newParams },
       }))
-      if (_options.autoFetch) {
+      if (!_options.ignoreFetch) {
         get().fetch();
       }
     },
@@ -279,11 +279,11 @@ export function createPaginatedStoreActions<T, P extends CursorParams>(
 
     params: _initialData.params,
     updateParams: (newParams, options) => {
-      const _options = {autoFetch: true, ...options};
+      const _options = {ignoreFetch: false, ...options};
       set((state) => ({
         params: { ...state.params, ...newParams },
       }))
-      if (_options.autoFetch) {
+      if (!_options.ignoreFetch) {
         get().fetch();
       }
     },
