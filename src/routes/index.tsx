@@ -7,6 +7,11 @@ import SignInPage from '@/pages/SignInPage'
 import SignUpPage from '@/pages/SignUpPage'
 import ForgotPasswordPage from '@/pages/ForgotPasswordPage'
 import ResetPasswordPage from '@/pages/ResetPasswordPage'
+import ProductsPage from '@/pages/ProductsPage'
+import OrdersPage from '@/pages/OrdersPage'
+import CustomersPage from '@/pages/CustomersPage'
+import AnalyticsPage from '@/pages/AnalyticsPage'
+import SettingsPage from '@/pages/SettingsPage'
 
 export const router = createBrowserRouter([
   {
@@ -38,6 +43,26 @@ export const router = createBrowserRouter([
               {
                 index: true,
                 element: <HomePage />,
+              },
+              {
+                path: '/products',
+                element: <ProductsPage />,
+              },
+              {
+                path: '/orders',
+                element: <OrdersPage />,
+              },
+              {
+                path: '/customers',
+                element: <CustomersPage />,
+              },
+              {
+                path: '/analytics',
+                element: <AnalyticsPage />,
+              },
+              {
+                path: '/settings',
+                element: <SettingsPage />,
               },
             ],
           },
