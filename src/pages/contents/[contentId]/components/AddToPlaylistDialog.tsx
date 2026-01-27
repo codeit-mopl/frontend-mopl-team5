@@ -27,18 +27,23 @@ export default function AddToPlaylistDialog({
   const [userPlaylists, setUserPlaylists] = useState<PlaylistDto[]>([]);
   const [selectedPlaylistIds, setSelectedPlaylistIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [adding, setAdding] = useState(false);
+  const [hasNext, setHasNext] = useState(false);
+  const [nextCursor, setNextCursor] = useState<string | undefined>();
+  const [nextIdAfter, setNextIdAfter] = useState<string | undefined>();
   const { data: jwt } = useAuthStore();
 
-  // 모달이 열릴 때 사용자의 플레이리스트 fetch
   useEffect(() => {
     if (open && jwt?.userDto.id) {
       fetchUserPlaylists();
     } else {
-      // 모달이 닫힐 때 상태 초기화
       setView('list');
       setUserPlaylists([]);
       setSelectedPlaylistIds(new Set());
+      setHasNext(false);
+      setNextCursor(undefined);
+      setNextIdAfter(undefined);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, jwt?.userDto.id]);
@@ -50,24 +55,57 @@ export default function AddToPlaylistDialog({
     try {
       const response = await getPlaylists({
         ownerIdEqual: jwt.userDto.id,
-        limit: 100,
+        limit: 20,
         sortDirection: 'DESCENDING',
         sortBy: 'updatedAt',
       });
 
-      // 이미 추가된 콘텐츠가 있는 플레이리스트 필터링
       const notAddedPlaylists = response.data.filter((playlist) => {
         const hasContent = playlist.contents.some((content) => content.id === contentId);
-        return !hasContent; // 콘텐츠가 없는 플레이리스트만 표시
+        return !hasContent;
       });
 
       setUserPlaylists(notAddedPlaylists);
-      setSelectedPlaylistIds(new Set()); // 초기 선택 없음
+      setSelectedPlaylistIds(new Set());
+      setHasNext(response.hasNext || false);
+      setNextCursor(response.nextCursor);
+      setNextIdAfter(response.nextIdAfter);
     } catch (err) {
       console.error('Failed to fetch playlists:', err);
       toast.error('플레이리스트를 불러오는데 실패했습니다.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchMorePlaylists = async () => {
+    if (!jwt?.userDto.id || !hasNext || loadingMore) return;
+
+    setLoadingMore(true);
+    try {
+      const response = await getPlaylists({
+        ownerIdEqual: jwt.userDto.id,
+        limit: 20,
+        sortDirection: 'DESCENDING',
+        sortBy: 'updatedAt',
+        cursor: nextCursor,
+        idAfter: nextIdAfter,
+      });
+
+      const notAddedPlaylists = response.data.filter((playlist) => {
+        const hasContent = playlist.contents.some((content) => content.id === contentId);
+        return !hasContent;
+      });
+
+      setUserPlaylists((prev) => [...prev, ...notAddedPlaylists]);
+      setHasNext(response.hasNext || false);
+      setNextCursor(response.nextCursor);
+      setNextIdAfter(response.nextIdAfter);
+    } catch (err) {
+      console.error('Failed to fetch more playlists:', err);
+      toast.error('플레이리스트를 불러오는데 실패했습니다.');
+    } finally {
+      setLoadingMore(false);
     }
   };
 
@@ -86,7 +124,6 @@ export default function AddToPlaylistDialog({
   const handleAddToPlaylists = async () => {
     setAdding(true);
     try {
-      // 선택된 플레이리스트에 콘텐츠 추가
       await Promise.all(
         Array.from(selectedPlaylistIds).map((playlistId) =>
           addContentToPlaylist(playlistId, contentId)
@@ -105,13 +142,8 @@ export default function AddToPlaylistDialog({
 
   const handleCreatePlaylist = async (data: PlaylistCreateRequest) => {
     try {
-      // 1. API 호출
       const newPlaylist = await createPlaylist(data);
-
-      // 2. 스토어 동기화
       usePlaylistStore.getState().add(newPlaylist);
-
-      // 3. 새로 생성된 플레이리스트에 콘텐츠 추가
       await addContentToPlaylist(newPlaylist.id, contentId);
 
       toast.success('플레이리스트가 생성되고 콘텐츠가 추가되었습니다.');
@@ -126,17 +158,20 @@ export default function AddToPlaylistDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         hideCloseButton
-        className="max-w-[500px] max-h-[646px] bg-gray-800/50 backdrop-blur-[25px] border border-gray-800 rounded-3xl p-9"
+        className="max-w-[500px] max-h-[646px] bg-gray-800/50 backdrop-blur-[25px] border border-gray-800 rounded-3xl p-9 flex flex-col"
       >
         {view === 'list' ? (
           <PlaylistListView
             userPlaylists={userPlaylists}
             selectedPlaylistIds={selectedPlaylistIds}
             loading={loading}
+            loadingMore={loadingMore}
             adding={adding}
+            hasNext={hasNext}
             onCheckboxChange={handleCheckboxChange}
             onAddToPlaylists={handleAddToPlaylists}
             onCreateNew={() => setView('create')}
+            onLoadMore={fetchMorePlaylists}
             onClose={() => onOpenChange(false)}
           />
         ) : (
@@ -154,10 +189,13 @@ interface PlaylistListViewProps {
   userPlaylists: PlaylistDto[];
   selectedPlaylistIds: Set<string>;
   loading: boolean;
+  loadingMore: boolean;
   adding: boolean;
+  hasNext: boolean;
   onCheckboxChange: (playlistId: string, isChecked: boolean) => void;
   onAddToPlaylists: () => void;
   onCreateNew: () => void;
+  onLoadMore: () => void;
   onClose: () => void;
 }
 
@@ -165,16 +203,18 @@ function PlaylistListView({
   userPlaylists,
   selectedPlaylistIds,
   loading,
+  loadingMore,
   adding,
+  hasNext,
   onCheckboxChange,
   onAddToPlaylists,
   onCreateNew,
+  onLoadMore,
   onClose,
 }: PlaylistListViewProps) {
   return (
-    <div className="flex flex-col h-full">
-      {/* 헤더 */}
-      <div className="flex items-center justify-between pb-6">
+    <>
+      <div className="flex items-center justify-between pb-6 flex-shrink-0">
         <h2 className="text-title1-sb text-gray-300">플레이리스트 추가</h2>
         <DialogClose asChild>
           <button className="w-6 h-6" onClick={onClose}>
@@ -183,8 +223,7 @@ function PlaylistListView({
         </DialogClose>
       </div>
 
-      {/* 플레이리스트 목록 */}
-      <div className="flex-1 overflow-y-auto mb-5">
+      <div className="flex-1 overflow-y-auto mb-5 min-h-0">
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <p className="text-body2-m text-gray-400">로딩 중...</p>
@@ -203,13 +242,20 @@ function PlaylistListView({
                 onChange={(isChecked) => onCheckboxChange(playlist.id, isChecked)}
               />
             ))}
+            {hasNext && (
+              <button
+                onClick={onLoadMore}
+                disabled={loadingMore}
+                className="w-full py-3 text-body2-m text-gray-400 hover:text-gray-300 transition-colors disabled:opacity-50"
+              >
+                {loadingMore ? '로딩 중...' : '더 보기'}
+              </button>
+            )}
           </div>
         )}
       </div>
 
-      {/* 하단 버튼 - 한 줄 배치 */}
-      <div className="flex gap-4">
-        {/* 새 플레이리스트 버튼 */}
+      <div className="flex gap-4 flex-shrink-0">
         <button
           onClick={onCreateNew}
           className="flex-1 h-[54px] bg-gray-700 rounded-xl px-5 py-3 hover:bg-gray-600 transition-colors"
@@ -217,7 +263,6 @@ function PlaylistListView({
           <span className="text-body2-sb text-gray-50">+ 새 플레이리스트</span>
         </button>
 
-        {/* 추가 버튼 */}
         <button
           onClick={onAddToPlaylists}
           disabled={adding || selectedPlaylistIds.size === 0}
@@ -228,7 +273,7 @@ function PlaylistListView({
           </span>
         </button>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -280,7 +325,6 @@ function CreatePlaylistView({ onBack, onCreate }: CreatePlaylistViewProps) {
 
   return (
     <div className="flex flex-col gap-5">
-      {/* 헤더 */}
       <div className="flex items-center gap-2 py-2">
         <button onClick={onBack} className="w-5 h-5">
           <img src={icArrowLeft} alt="뒤로가기" className="w-full h-full" />
@@ -288,7 +332,6 @@ function CreatePlaylistView({ onBack, onCreate }: CreatePlaylistViewProps) {
         <h2 className="text-title1-sb text-gray-300">새 플레이리스트</h2>
       </div>
 
-      {/* 제목 입력 */}
       <div className="flex flex-col gap-2.5">
         <label className="text-body3-sb text-gray-300 px-1">제목</label>
         <input
@@ -300,7 +343,6 @@ function CreatePlaylistView({ onBack, onCreate }: CreatePlaylistViewProps) {
         />
       </div>
 
-      {/* 설명 입력 */}
       <div className="flex flex-col gap-2.5">
         <label className="text-body3-sb text-gray-300 px-1">설명</label>
         <textarea
@@ -311,7 +353,6 @@ function CreatePlaylistView({ onBack, onCreate }: CreatePlaylistViewProps) {
         />
       </div>
 
-      {/* 버튼 */}
       <div className="flex gap-4 pt-1.5">
         <button
           onClick={onBack}
