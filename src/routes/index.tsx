@@ -1,73 +1,69 @@
-import { createBrowserRouter } from 'react-router-dom'
-import RootLayout from '@/layouts/RootLayout'
-import ProtectedLayout from '@/layouts/ProtectedLayout'
-import ProtectedRoute from '@/components/common/ProtectedRoute'
-import HomePage from '@/pages/HomePage'
-import SignInPage from '@/pages/SignInPage'
-import SignUpPage from '@/pages/SignUpPage'
-import ForgotPasswordPage from '@/pages/ForgotPasswordPage'
-import ResetPasswordPage from '@/pages/ResetPasswordPage'
-import ProductsPage from '@/pages/ProductsPage'
-import OrdersPage from '@/pages/OrdersPage'
-import CustomersPage from '@/pages/CustomersPage'
-import AnalyticsPage from '@/pages/AnalyticsPage'
-import SettingsPage from '@/pages/SettingsPage'
+import { Routes, Route, Navigate } from 'react-router-dom';
 
-export const router = createBrowserRouter([
-  {
-    path: '/',
-    element: <RootLayout />,
-    children: [
-      {
-        path: '/sign-in',
-        element: <SignInPage />,
-      },
-      {
-        path: '/sign-up',
-        element: <SignUpPage />,
-      },
-      {
-        path: '/forgot-password',
-        element: <ForgotPasswordPage />,
-      },
-      {
-        path: '/reset-password',
-        element: <ResetPasswordPage />,
-      },
-      {
-        element: <ProtectedRoute />,
-        children: [
-          {
-            element: <ProtectedLayout />,
-            children: [
-              {
-                index: true,
-                element: <HomePage />,
-              },
-              {
-                path: '/products',
-                element: <ProductsPage />,
-              },
-              {
-                path: '/orders',
-                element: <OrdersPage />,
-              },
-              {
-                path: '/customers',
-                element: <CustomersPage />,
-              },
-              {
-                path: '/analytics',
-                element: <AnalyticsPage />,
-              },
-              {
-                path: '/settings',
-                element: <SettingsPage />,
-              },
-            ],
-          },
-        ],
-      },
-    ],
-  },
-])
+// Layouts
+import RootLayout from '@/components/layout/RootLayout';
+import ProtectedRoute from '@/components/layout/ProtectedRoute';
+import ProtectedLayout from '@/components/layout/ProtectedLayout';
+
+// Auth Pages
+import SignInPage from '@/pages/sign-in/page';
+import SignUpPage from '@/pages/sign-up/page';
+import ResetPasswordPage from '@/pages/reset-password/page';
+
+// Protected Pages
+import ContentsPage from '@/pages/contents/page';
+import ContentDetailPage from '@/pages/contents/[contentId]/page';
+import PlaylistsPage from '@/pages/playlists/page';
+import PlaylistDetailPage from '@/pages/playlists/[playlistId]/page';
+import ProfilePage from '@/pages/profiles/[userId]/page';
+import ConversationsPage from '@/pages/conversations/page';
+import ConversationWithPage from '@/pages/conversations/with/page';
+import AdminUsersPage from '@/pages/admin/users/page';
+
+// Error Pages
+import NotFoundPage from '@/pages/not-found/page';
+import ProfileRoutePage from "@/pages/profiles/page.tsx";
+
+export default function AppRoutes() {
+  return (
+    <Routes>
+      <Route element={<RootLayout />}>
+        {/* Public Auth Routes */}
+        <Route path="/sign-in" element={<SignInPage />} />
+        <Route path="/sign-up" element={<SignUpPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
+
+        {/* Protected Routes */}
+        <Route element={<ProtectedRoute />}>
+          <Route element={<ProtectedLayout />}>
+            {/* Home redirect to contents */}
+            <Route index element={<Navigate to="/contents" replace />} />
+
+            {/* Contents */}
+            <Route path="/contents" element={<ContentsPage />} />
+            <Route path="/contents/:contentId" element={<ContentDetailPage />} />
+
+            {/* Playlists */}
+            <Route path="/playlists" element={<PlaylistsPage />} />
+            <Route path="/playlists/:playlistId" element={<PlaylistDetailPage />} />
+
+            {/* Users */}
+            <Route path="/profiles" element={<ProfileRoutePage />} />
+            <Route path="/profiles/:userId" element={<ProfilePage />} />
+
+            {/* Conversations */}
+            <Route path="/conversations/with" element={<ConversationWithPage />} />
+            <Route path="/conversations" element={<ConversationsPage />} />
+            <Route path="/conversations/:conversationId" element={<ConversationsPage />} />
+
+            {/* Admin */}
+            <Route path="/admin/users" element={<AdminUsersPage />} />
+          </Route>
+        </Route>
+
+        {/* 404 Not Found */}
+        <Route path="*" element={<NotFoundPage />} />
+      </Route>
+    </Routes>
+  );
+}

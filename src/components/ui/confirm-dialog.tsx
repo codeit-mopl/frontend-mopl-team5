@@ -5,51 +5,69 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from './dialog'
-import { Button } from './button'
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 
 interface ConfirmDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onConfirm: () => void
-  title?: string
-  description?: string
-  confirmText?: string
-  cancelText?: string
-  variant?: 'default' | 'destructive'
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  title: string;
+  description: string;
+  onConfirm: () => void;
+  confirmText?: string;
+  cancelText?: string;
+  variant?: 'default' | 'destructive';
 }
 
-export function ConfirmDialog({
+export default function ConfirmDialog({
   open,
   onOpenChange,
+  title,
+  description,
   onConfirm,
-  title = 'Are you sure?',
-  description = 'This action cannot be undone.',
-  confirmText = 'Confirm',
-  cancelText = 'Cancel',
+  confirmText = '확인',
+  cancelText = '취소',
   variant = 'default',
 }: ConfirmDialogProps) {
   const handleConfirm = () => {
-    onConfirm()
-    onOpenChange(false)
-  }
+    onConfirm();
+    onOpenChange(false);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>{description}</DialogDescription>
+          <DialogTitle className="text-title1-b text-gray-100">
+            {title}
+          </DialogTitle>
+          <DialogDescription className="text-body2-m text-gray-400">
+            {description}
+          </DialogDescription>
         </DialogHeader>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+        <DialogFooter className="gap-2 sm:gap-0">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            className="text-body2-sb border-gray-600 text-gray-200 hover:bg-gray-800 hover:text-white"
+          >
             {cancelText}
           </Button>
-          <Button variant={variant} onClick={handleConfirm}>
+          <Button
+            type="button"
+            variant={variant}
+            onClick={handleConfirm}
+            className={
+              variant === 'destructive'
+                ? 'text-body2-sb'
+                : 'text-body2-sb bg-pink-500 text-white hover:bg-pink-600'
+            }
+          >
             {confirmText}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
