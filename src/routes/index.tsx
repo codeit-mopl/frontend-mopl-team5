@@ -4,6 +4,9 @@ import ProtectedLayout from '@/layouts/ProtectedLayout'
 import ProtectedRoute from '@/components/common/ProtectedRoute'
 import HomePage from '@/pages/HomePage'
 import SignInPage from '@/pages/SignInPage'
+import SignUpPage from '@/pages/SignUpPage'
+import ForgotPasswordPage from '@/pages/ForgotPasswordPage'
+import ResetPasswordPage from '@/pages/ResetPasswordPage'
 
 export const router = createBrowserRouter([
   {
@@ -13,6 +16,18 @@ export const router = createBrowserRouter([
       {
         path: '/sign-in',
         element: <SignInPage />,
+      },
+      {
+        path: '/sign-up',
+        element: <SignUpPage />,
+      },
+      {
+        path: '/forgot-password',
+        element: <ForgotPasswordPage />,
+      },
+      {
+        path: '/reset-password',
+        element: <ResetPasswordPage />,
       },
       {
         element: <ProtectedRoute />,

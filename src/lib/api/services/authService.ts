@@ -21,6 +21,15 @@ interface SignUpRequest {
   name: string
 }
 
+interface ForgotPasswordRequest {
+  email: string
+}
+
+interface ResetPasswordRequest {
+  token: string
+  password: string
+}
+
 export const authService = {
   signIn: async (data: SignInRequest): Promise<SignInResponse> => {
     const response = await apiClient.post<SignInResponse>('/auth/sign-in', data)
@@ -42,5 +51,13 @@ export const authService = {
       { refreshToken }
     )
     return response.data
+  },
+
+  forgotPassword: async (data: ForgotPasswordRequest): Promise<void> => {
+    await apiClient.post('/auth/forgot-password', data)
+  },
+
+  resetPassword: async (data: ResetPasswordRequest): Promise<void> => {
+    await apiClient.post('/auth/reset-password', data)
   },
 }
