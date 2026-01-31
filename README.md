@@ -6,7 +6,7 @@
 
 | 항목 | 내용 |
 |------|------|
-| **📣 발표 자료** | [발표 자료 PDF](https://drive.google.com/file/d/1-7fUj4BIihQRKfcwM1NBHLagahFEc8zn/view) |
+| **📣 발표 자료** | [발표 자료 PDF](https://drive.google.com/file/d/1LrK0YXqBQ8UzobHF84VPDuaiK0s3LdBe/view?usp=drive_link) |
 | **📄 협업 문서** | [Notion 페이지](https://pricey-periodical-112.notion.site/SB5-PART4-TEAM5-2ccadbd27791807b803edafbaa5bb67c) |
 | **🔗 배포 링크** | [배포 링크](http://mopl-alb-1504082754.ap-northeast-2.elb.amazonaws.com/#/sign-in) |
 | **🎬 시연 영상** | [시연 영상](https://drive.google.com/file/d/15ogVEJtYbS8HRtJ9Mc24WJ-DHge4cH-5/view)|
